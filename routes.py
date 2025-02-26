@@ -2,20 +2,22 @@ from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import os
 from models import Usuario, Agente, Mensagem, Arquivo
-from config import db, app, ALLOWED_EXTENSIONS, openai
+from config import db, app, ALLOWED_EXTENSIONS
+import openai
+
+# Inicializar cliente OpenAI
+client = openai.OpenAI()
 
 # Definir o Blueprint no início
 mensagem_bp = Blueprint('mensagem_bp', __name__)
 
-# Modificar a definição da rota para garantir um nome único de endpoint
 @mensagem_bp.route('/mensagens/<int:agente_id>', methods=['GET'], endpoint='get_mensagens')
 def get_mensagens(agente_id):
     mensagens = Mensagem.query.filter_by(agente_id=agente_id).order_by(Mensagem.timestamp.asc()).all()
-
     if not mensagens:
         return jsonify({"message": "Nenhuma mensagem encontrada para este agente"}), 404
 
-    return jsonify([{
+    return jsonify([{ 
         "id": msg.id,
         "agente_id": msg.agente_id,
         "usuario_id": msg.usuario_id,
@@ -25,7 +27,6 @@ def get_mensagens(agente_id):
     } for msg in mensagens])
 
 def register_routes(app):
-    # Registrar o blueprint
     app.register_blueprint(mensagem_bp)
 
     @app.route('/usuarios', methods=['POST'])
@@ -65,33 +66,6 @@ def register_routes(app):
             "criado_em": agente.criado_em
         })
 
-    @app.route('/upload/<int:agente_id>', methods=['POST'])
-    def upload_file(agente_id):
-        if 'file' not in request.files:
-            return jsonify({"message": "Nenhum arquivo enviado"}), 400
-
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"message": "Nome de arquivo inválido"}), 400
-
-        if file:
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-
-            novo_arquivo = Arquivo(
-                agente_id=agente_id,
-                nome=filename,
-                caminho=filepath,
-                tipo=filename.rsplit('.', 1)[1].lower()
-            )
-            db.session.add(novo_arquivo)
-            db.session.commit()
-
-            return jsonify({"message": "Arquivo enviado com sucesso!", "arquivo_id": novo_arquivo.id}), 201
-
-        return jsonify({"message": "Tipo de arquivo não permitido"}), 400
-
     @app.route('/gerar_resposta', methods=['POST'])
     def gerar_resposta():
         try:
@@ -116,7 +90,7 @@ def register_routes(app):
             if arquivos_texto:
                 system_message += f"\n\n--- Arquivos anexados ---\n{arquivos_texto}"
 
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": system_message},
@@ -124,7 +98,7 @@ def register_routes(app):
                 ]
             )
 
-            resposta = response['choices'][0]['message']['content']
+            resposta = response.choices[0].message.content
 
             nova_mensagem = Mensagem(
                 agente_id=agente_id,
