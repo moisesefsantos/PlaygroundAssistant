@@ -62,6 +62,9 @@ with st.sidebar:
 
         if st.button('Save', type='primary'):
             st.success('Saved!')
+
+        if st.button('Delete', type='primary',icon=':material/bomb:'):
+            st.success('Assistant deleted')
     
 
 st.subheader("Thread")
@@ -69,15 +72,15 @@ with st.container(border=True):
     chat_history = st.text_area("Chat history", height=250, key="chat_history")
     st.write(' ')
 
-with st.form('Messages'):
-    col_input, col_button = st.columns([10, 1])
-    with col_input:
-        user_input = st.text_input('Enter your message',placeholder="Type here...")
-    with col_button:
-        st.write(' ')
-        run = st.form_submit_button('Run', type='primary')
-    if run:
-        st.write("Loading...")
+#with st.form('Messages'):
+    #col_input, col_button = st.columns([10, 1])
+    #with col_input:
+    user_input = st.chat_input('Enter your message') #,placeholder="Type here..."
+    #with col_button:
+    #    st.write(' ')
+    #    run = st.button('Run', type='primary')
+    #if run:
+    #    st.write("Loading...")
 
     with st.container(border=True):
         st.file_uploader("Upload file", type=["txt", "pdf", "json", "csv"])
