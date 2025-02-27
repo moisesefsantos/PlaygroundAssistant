@@ -7,7 +7,7 @@ from streamlit_option_menu import option_menu
 #st.set_page_config(layout="wide", page_title="Playground Assistants")
 
     
-st.markdown("## Welcome to Playground Assistants")
+st.markdown("## :material/dashboard: Welcome to Playground Assistants")
             
     # Menu Lateral
 with st.sidebar:
@@ -15,8 +15,8 @@ with st.sidebar:
 
         #Criação de novos Assistants
          
-    created = 'Assistant 1'
-    option_list = ['Choose Agent',created,'Create New']
+    created = ['Assistant 1', 'Assistant 2']
+    option_list = ['Choose Agent','Create New'] + created
     name = st.selectbox("Select Assistant", option_list)
         
     if name=='Create New':
@@ -36,16 +36,16 @@ with st.sidebar:
             pres_penalty = st.slider("Presence penalty", 0.0, 2.0, 0.0)
 
             st.markdown('<div class="save-preset-container">', unsafe_allow_html=True)
-            st.button("Save")
-            st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.button('Save', type='primary'):
+            created.append(st.session_state.name_message)
+            st.success('Assistant Created!')
 
 
-    if name=='Assistant 1':
-        name_message = st.text_input('Assistant',placeholder="Assistant 1")
-
-            # Alterado para placeholder
-        system_message = st.text_area("Context", placeholder="Old instructions")
+    if name in created:
+        with st.container(border=True):
+            name_message = st.text_input('Assistant Name',value=name)
+            system_message = st.text_area("Context", value="Old instructions")
 
         with st.container():
             st.markdown('<div class="model-config">', unsafe_allow_html=True)
@@ -57,11 +57,11 @@ with st.sidebar:
             freq_penalty = st.slider("Frequency penalty", 0.0, 1.0, 0.0)
             pres_penalty = st.slider("Presence penalty", 0.0, 1.0, 0.0)
 
-            st.markdown('<div class="save-preset-container">', unsafe_allow_html=True)
-            st.button("Save")
-            st.markdown('</div>', unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
+
+        if st.button('Save', type='primary'):
+            st.success('Saved!')
     
 
 st.subheader("Thread")
@@ -75,7 +75,7 @@ with st.form('Messages'):
         user_input = st.text_input('Enter your message',placeholder="Type here...")
     with col_button:
         st.write(' ')
-        run = st.form_submit_button('Run')
+        run = st.form_submit_button('Run', type='primary')
     if run:
         st.write("Loading...")
 
